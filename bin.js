@@ -12,8 +12,20 @@ const cli = meow(
       --port, -p  Specify a port to run the server on
  
     Examples
-      $ wol-server start --port 3078
-      WOL Server running on port 3078
+      $ wol-server start
+      > WOL Server now running on default port 3078
+
+      $ wol-server start --port 9000
+      > WOL Server now running on port 9000
+
+      $ wol-server stop
+      > WOL Server stopped running
+
+      $ sudo wol-server startup
+      > WOL Server now runs on startup running
+
+      $ sudo wol-server unstartup
+      > WOL Server no longer runs on startup
 `,
   {
     flags: {

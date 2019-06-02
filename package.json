@@ -1,7 +1,7 @@
 {
   "name": "wol-server",
   "version": "1.0.0",
-  "description": "Confirgurable Wake On Lan Server for home automation",
+  "description": "Configurable Wake On Lan Server for home automation",
   "author": {
     "name": "Nick the Sick",
     "email": "nperez0111@gmail.com"

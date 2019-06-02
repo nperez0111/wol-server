@@ -37,6 +37,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/nickthesick/admin-console-backend.git"
+    "url": "git@github.com:nperez0111/wol-server.git"
   }
 }

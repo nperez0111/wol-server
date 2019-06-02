@@ -36,6 +36,11 @@ const cli = meow(
     }
   }
 )
+
+if (cli.input.length === 0) {
+  return cli.showHelp()
+}
+
 const [startOrStop] = cli.input
 pm2.connect(function(err) {
   if (err) {

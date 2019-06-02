@@ -57,16 +57,21 @@ app.get('/wake/:macAddress', (req, res) => {
       })
     })
 })
-
+const defaultPowerOffPort = 5709
 app.get('/power-off', (req, res) => {
   const {
-    query: { url = process.env.WOL_SERVER_POWER_OFF_URL, method = 'post' },
+    query: {
+      url = process.env.WOL_SERVER_POWER_OFF_URL,
+      ip,
+      port = defaultPowerOffPort,
+      method = 'post'
+    },
     body: data
   } = req
 
   axios({
     method,
-    url,
+    url: url || `http://${ip}:${port}/power-off`,
     data
   })
     .then(() => {
@@ -79,11 +84,11 @@ app.get('/power-off', (req, res) => {
 
 app.get('/power-off/:ipAddress', (req, res) => {
   const {
-    params: { ipAddress }
+    params: { ipAddress, port = defaultPowerOffPort }
   } = req
 
   axios
-    .post(`http://${ipAddress}:5709/power-off`)
+    .post(`http://${ipAddress}:${port}/power-off`)
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })
     })

@@ -128,6 +128,7 @@ module.exports = ({ port }) => {
 }
 
 if (!module.parent) {
-  const port = 3078
+  console.log(process.argv)
+  const port = (process.argv[2] && Number(process.argv[2])) || 3078
   module.exports({ port })
 }

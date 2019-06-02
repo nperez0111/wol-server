@@ -6,6 +6,9 @@
     "name": "Nick the Sick",
     "email": "nperez0111@gmail.com"
   },
+  "bin": {
+    "wol-server": "bin.js"
+  },
   "main": "index.js",
   "scripts": {
     "test": "ava",

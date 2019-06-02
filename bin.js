@@ -31,15 +31,22 @@ pm2.connect(function(err) {
     process.exit(2)
   }
   if (startOrStop === 'start') {
-    pm2.start('index.js', (err, app) => {
-      pm2.disconnect()
-      if (err) {
-        if (Array.isArray(app) && app.length) {
-          return console.log('Server is already running')
+    pm2.start(
+      __dirname + '/index.js',
+      {
+        scriptArgs: [cli.flags.port]
+      },
+      (err, app) => {
+        console.log(app)
+        pm2.disconnect()
+        if (err) {
+          if (Array.isArray(app) && app.length) {
+            return console.log('Server is already running')
+          }
+          return console.error('Unable to start server')
         }
-        return console.error('Unable to start server')
       }
-    })
+    )
   } else if (startOrStop == 'startup') {
     if (process.getuid() != 0) {
       pm2.disconnect()

@@ -1,42 +1,118 @@
-var express = require('express');
-var axios = require('axios');
-var wol = require('wake_on_lan');
+const express = require('express')
+const axios = require('axios')
+const wol = require('wake_on_lan')
+const bodyParser = require('body-parser')
+const server = require('http').createServer()
 
+const app = express()
 
-
-var app = express();
-
-app.get('/wake', function (req, res) {
-  wol.wake('54:04:A6:EB:5D:25', function(error) {
-    if (error) {
-      // handle error
-      return res.error("Couldn't wake up computer");
-      
-    } else {
-      res.status(200);
-      res.end("ok");
+function wake(macAddress, options) {
+  return new Promise((resolve, reject) => {
+    try {
+      wol.wake(macAddress, options, error => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve()
+        }
+      })
+    } catch (err) {
+      reject(err)
     }
-  });
-});
-
-app.get('/off', function (req, res) {
-let flag = false;
-
-  axios.post('http://10.0.0.211:5609/sleep').then(function () {
-  	flag = false;
-  }).catch(function () {
-  	flag = "Couldn't turn off computer";
   })
+}
 
-  setTimeout(function () {
-  	if(flag){
-  		return res.error(flag);
-  	}
-  	res.status(200)
-  	res.end("ok")
-  }, 2500);
-});
+app.use(bodyParser.urlencoded({ extended: true })).use(bodyParser.json())
 
-app.listen(3078, function () {
-  console.log('Wake on Lan at: http://localhost:3078/');
-});
+app.get('/wake', (req, res) => {
+  const { query: options } = req
+  const macAddress = process.env.WOL_SERVER_MAC_ADDRESS_TO_WAKE
+
+  wake(macAddress, options)
+    .then(() => {
+      res.status(200).json({ ok: true, status: 'complete' })
+    })
+    .catch(err => {
+      res.status(500).json({
+        ok: false,
+        status: err.message || "Couldn't wake the computer"
+      })
+    })
+})
+
+app.get('/wake/:macAddress', (req, res) => {
+  const {
+    params: { macAddress },
+    query: options
+  } = req
+
+  wake(macAddress, options)
+    .then(() => {
+      res.status(200).json({ ok: true, status: 'complete' })
+    })
+    .catch(err => {
+      res.status(500).json({
+        ok: false,
+        status: err.message || "Couldn't wake the computer"
+      })
+    })
+})
+
+app.get('/power-off', (req, res) => {
+  const {
+    query: { url = process.env.WOL_SERVER_POWER_OFF_URL, method = 'post' },
+    body: data
+  } = req
+
+  axios({
+    method,
+    url,
+    data
+  })
+    .then(() => {
+      res.status(200).json({ ok: true, status: 'complete' })
+    })
+    .catch(() => {
+      res.status(500).json({ ok: false, status: "Couldn't turn off computer" })
+    })
+})
+
+app.get('/power-off/:ipAddress', (req, res) => {
+  const {
+    params: { ipAddress }
+  } = req
+
+  axios
+    .post(`http://${ipAddress}:5709/power-off`)
+    .then(() => {
+      res.status(200).json({ ok: true, status: 'complete' })
+    })
+    .catch(() => {
+      res.status(500).json({ ok: false, status: "Couldn't turn off computer" })
+    })
+})
+
+const port = 3078
+server
+  .on('request', app)
+  .on('listening', function() {
+    const addr = this.address()
+    const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`
+    console.log(`WOL Server running on ${bind}`)
+  })
+  .on('error', function(error) {
+    if (error.syscall !== 'listen') throw error
+    const addr = this.address() || { port }
+    const bind = typeof addr === 'string' ? `pipe ${addr}` : `port ${addr.port}`
+    switch (error.code) {
+      case 'EACCES':
+        console.error(`${bind} requires elevated privileges`)
+        process.exit(1)
+      case 'EADDRINUSE':
+        console.error(`${bind} is already in use`)
+        process.exit(1)
+      default:
+        throw error
+    }
+  })
+  .listen(port)

@@ -71,11 +71,16 @@ app.get('/power-off', (req, res) => {
     body: data
   } = req
 
-  axios({
-    method,
-    url: url || `http://${ip}:${port}/power-off`,
-    data
-  })
+  Promise.race([
+    axios({
+      method,
+      url: url || `http://${ip}:${port}/sleep`,
+      data
+    }),
+    new Promise(resolve => {
+      setTimeout(resolve, 2500)
+    })
+  ])
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })
     })
@@ -89,8 +94,12 @@ app.get('/power-off/:ipAddress', (req, res) => {
     params: { ipAddress, port = defaultPowerOffPort }
   } = req
 
-  axios
-    .post(`http://${ipAddress}:${port}/power-off`)
+  Promise.race([
+    axios.post(`http://${ipAddress}:${port}/power-off`),
+    new Promise(resolve => {
+      setTimeout(resolve, 2500)
+    })
+  ])
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })
     })

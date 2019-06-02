@@ -54,7 +54,6 @@ pm2.connect(function(err) {
         scriptArgs: [cli.flags.port]
       },
       (err, app) => {
-        console.log(app)
         pm2.disconnect()
         if (err) {
           if (Array.isArray(app) && app.length) {
@@ -62,6 +61,7 @@ pm2.connect(function(err) {
           }
           return console.error('Unable to start server')
         }
+        console.log(`WOL Server running on ${cli.flags.port || 3078}`)
       }
     )
   } else if (startOrStop == 'startup') {
@@ -92,6 +92,7 @@ pm2.connect(function(err) {
           }
           console.error('Unable to setup startup script for server')
         }
+        console.log(`WOL Server running on startup now`)
       }
     )
   } else if (startOrStop == 'unstartup') {
@@ -121,6 +122,7 @@ pm2.connect(function(err) {
           }
           console.error('Unable to stop startup script for server')
         }
+        console.log(`WOL Server no longer running on startup`)
       }
     )
   } else {
@@ -132,6 +134,7 @@ pm2.connect(function(err) {
         }
         return console.error('Unable to stop server')
       }
+      console.log(`WOL Server successfully stopped running`)
     })
   }
 })

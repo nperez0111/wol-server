@@ -78,7 +78,7 @@ app.get('/power-off', (req, res) => {
       data
     }),
     new Promise(resolve => {
-      setTimeout(resolve, 2500)
+      setTimeout(resolve, 800)
     })
   ])
     .then(() => {
@@ -97,7 +97,7 @@ app.get('/power-off/:ipAddress', (req, res) => {
   Promise.race([
     axios.post(`http://${ipAddress}:${port}/power-off`),
     new Promise(resolve => {
-      setTimeout(resolve, 2500)
+      setTimeout(resolve, 800)
     })
   ])
     .then(() => {

@@ -48,8 +48,32 @@ npm install wol-server -g
 ```
 
 ## Usage
-Once you have the server running you'll have the ability to use a few routes to trigger turning on and off the computer:
+Once you have the server running you'll have the ability to use a few routes to trigger turning on and off the computer. Here are some useful ones:
 
+### Turning on a computer with WOL Magic Packet
+
+`http://localhost:3078/wake/AA:BB:CC:DD:EE:FF`
+
+Where `AA:BB:CC:DD:EE:FF` is the Hardware MAC address of the computer you want to turn on (note WOL only works over ethernet).
+
+### Turning off a computer that is running [`stop-server`](https://github.com/typicode/stop-server)
+
+`http://localhost:3078/192.168.1.12/sleep`
+
+To sleep the computer at `192.168.1.12` (which I found is the only way my machine will wake up to a WOL Magic Packet but your expierence may vary).
+
+`http://localhost:3078/192.168.1.12/power-off`
+
+To turn off the computer at the IP address `192.168.1.12` which you should definitely change.
+
+### What to do with these URLs
+Put them into [ha-bridge](https://github.com/bwssytems/ha-bridge) by:
+
+  1. Creating a new device by going to "Home" > "Add/Edit" > "Add Bridge Device"
+  2. Set "Type" to "HTTP Device" for "On Itmes", Put the wake URL in the "Target Item" section and make sure to click "Add" on the far right.
+  3. Set "Type" to "HTTP Device" for "Off Itmes", Put the sleep or power-off URL in the "Target Item" section and make sure to click "Add" on the far right.
+
+## All Routes
 | URL | Query Params | Description | Sample |
 | --- | ------------ | ----------- | ------ |
 | `wake/:macAddress` | Any valid option for [`node_wake_on_lan`](https://github.com/agnat/node_wake_on_lan) ***(all optional)*** | Sends a WOL Magic packet to the computer at `:macAddress` | `localhost:3078/wake/AA:BB:CC:DD:EE:FF` |

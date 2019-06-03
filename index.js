@@ -59,22 +59,23 @@ app.get('/wake/:macAddress', (req, res) => {
       })
     })
 })
-const defaultPowerOffPort = 5709
-app.get('/power-off', (req, res) => {
+const DEFAULT_POWER_OFF_REMOTE_PORT = 5709
+app.get('/remote/:action', (req, res) => {
   const {
     query: {
       url = process.env.WOL_SERVER_POWER_OFF_URL,
       ip,
-      port = defaultPowerOffPort,
+      port = DEFAULT_POWER_OFF_REMOTE_PORT,
       method = 'post'
     },
-    body: data
+    body: data,
+    params: { action }
   } = req
 
   Promise.race([
     axios({
       method,
-      url: url || `http://${ip}:${port}/sleep`,
+      url: url || `http://${ip}:${port}/${action}`,
       data
     }),
     new Promise(resolve => {
@@ -89,13 +90,13 @@ app.get('/power-off', (req, res) => {
     })
 })
 
-app.get('/power-off/:ipAddress', (req, res) => {
+app.get('/:ipAddress/:port/:action', (req, res) => {
   const {
-    params: { ipAddress, port = defaultPowerOffPort }
+    params: { ipAddress, port, action }
   } = req
 
   Promise.race([
-    axios.post(`http://${ipAddress}:${port}/power-off`),
+    axios.post(`http://${ipAddress}:${port}/${action}`),
     new Promise(resolve => {
       setTimeout(resolve, 800)
     })

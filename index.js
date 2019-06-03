@@ -90,13 +90,15 @@ app.get('/remote/:action', (req, res) => {
     })
 })
 
-app.get('/:ipAddress/:port/:action', (req, res) => {
+app.get('/:ipAddress/:action', (req, res) => {
   const {
-    params: { ipAddress, port, action }
+    params: { ipAddress, action }
   } = req
 
   Promise.race([
-    axios.post(`http://${ipAddress}:${port}/${action}`),
+    axios.post(
+      `http://${ipAddress}:${DEFAULT_POWER_OFF_REMOTE_PORT}/${action}`
+    ),
     new Promise(resolve => {
       setTimeout(resolve, 800)
     })
@@ -138,7 +140,6 @@ module.exports = ({ port }) => {
 }
 
 if (!module.parent) {
-  console.log(process.argv)
   const port = (process.argv[2] && Number(process.argv[2])) || 3078
   module.exports({ port })
 }

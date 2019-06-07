@@ -34,18 +34,19 @@ function wake(macAddress, options) {
         if (error) {
           reject(error)
         } else {
-          if (commandExists('cec-client')) {
-            resolve(
-              turnOnTV().then(success => {
-                if (!success) {
-                  return console.log('Unable to turn on TV...')
-                }
-                console.log('Successfully turned on the TV!')
-              })
-            )
-          } else {
-            resolve()
-          }
+          resolve()
+          return commandExists('cec-client')
+            .then(turnOnTV)
+            .then(success => {
+              if (!success) {
+                return console.log('Unable to turn on TV...')
+              }
+              console.log('Successfully turned on the TV!')
+            })
+            .catch(() => {
+              // Swallow the error
+              return
+            })
         }
       })
     } catch (err) {

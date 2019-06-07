@@ -4,7 +4,6 @@ const wol = require('wake_on_lan')
 const bodyParser = require('body-parser')
 const server = require('http').createServer()
 const execa = require('execa')
-const commandExists = require('command-exists')
 
 const app = express()
 
@@ -17,9 +16,11 @@ async function setTVStatus(status) {
     input = 'standby 0'
   }
   try {
-    return execa('cec-client', ['-s', '-d', '1'], { input })
+    return execa('cec-client', ['-s', '-d', '1'], { input }).then(() => {
+      console.log(`Successfully turned the TV ${status}`)
+    })
   } catch (err) {
-    console.error(err)
+    console.log(`Unable to turn the TV ${status}`)
     // Swallow error
     return false
   }
@@ -28,31 +29,18 @@ const turnOnTV = () => setTVStatus('on')
 const turnOffTV = () => setTVStatus('off')
 
 function wake(macAddress, options) {
-  return new Promise((resolve, reject) => {
-    try {
+  return Promise.race([
+    turnOnTV(),
+    new Promise((resolve, reject) =>
       wol.wake(macAddress, options, error => {
         if (error) {
           reject(error)
         } else {
           resolve()
-          return commandExists('cec-client')
-            .then(turnOnTV)
-            .then(success => {
-              if (!success) {
-                return console.log('Unable to turn on TV...')
-              }
-              console.log('Successfully turned on the TV!')
-            })
-            .catch(() => {
-              // Swallow the error
-              return
-            })
         }
       })
-    } catch (err) {
-      reject(err)
-    }
-  })
+    )
+  ])
 }
 
 app.use(bodyParser.urlencoded({ extended: true })).use(bodyParser.json())

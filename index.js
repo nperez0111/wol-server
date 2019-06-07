@@ -11,13 +11,15 @@ const app = express()
 app.use('/healthcheck', require('express-healthcheck')())
 
 async function setTVStatus(status) {
-  let stdin = 'on 0'
+  console.log(`Turning the TV ${status}`)
+  let input = 'on 0'
   if (status === 'off') {
-    stdin = 'standby 0'
+    input = 'standby 0'
   }
   try {
-    return await execa('cec-client', ['-s', '-d', '1'], { stdin })
-  } catch {
+    return execa('cec-client', ['-s', '-d', '1'], { input })
+  } catch (err) {
+    console.error(err)
     // Swallow error
     return false
   }
@@ -33,12 +35,14 @@ function wake(macAddress, options) {
           reject(error)
         } else {
           if (commandExists('cec-client')) {
-            turnOnTV().then(success => {
-              if (!success) {
-                console.log('unable to turn on tv')
-              }
-              resolve()
-            })
+            resolve(
+              turnOnTV().then(success => {
+                if (!success) {
+                  return console.log('Unable to turn on TV...')
+                }
+                console.log('Successfully turned on the TV!')
+              })
+            )
           } else {
             resolve()
           }

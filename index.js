@@ -117,7 +117,8 @@ app.get('/remote/:action', (req, res) => {
 
 app.get('/:ipAddress/:action', (req, res) => {
   const {
-    params: { ipAddress, action, tv }
+    params: { ipAddress, action },
+    query: { tv }
   } = req
 
   Promise.race(

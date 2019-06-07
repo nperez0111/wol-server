@@ -29,18 +29,20 @@ const turnOnTV = () => setTVStatus('on')
 const turnOffTV = () => setTVStatus('off')
 
 function wake(macAddress, options) {
-  return Promise.race([
-    turnOnTV(),
-    new Promise((resolve, reject) =>
-      wol.wake(macAddress, options, error => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve()
-        }
-      })
-    )
-  ])
+  return Promise.race(
+    [
+      options.tv ? turnOnTV() : false,
+      new Promise((resolve, reject) =>
+        wol.wake(macAddress, options, error => {
+          if (error) {
+            reject(error)
+          } else {
+            resolve()
+          }
+        })
+      )
+    ].filter(Boolean)
+  )
 }
 
 app.use(bodyParser.urlencoded({ extended: true })).use(bodyParser.json())
@@ -85,23 +87,26 @@ app.get('/remote/:action', (req, res) => {
       url = process.env.WOL_SERVER_POWER_OFF_URL,
       ip,
       port = DEFAULT_POWER_OFF_REMOTE_PORT,
-      method = 'post'
+      method = 'post',
+      tv
     },
     body: data,
     params: { action }
   } = req
 
-  Promise.race([
-    axios({
-      method,
-      url: url || `http://${ip}:${port}/${action}`,
-      data
-    }),
-    new Promise(resolve => {
-      setTimeout(resolve, 800)
-    }),
-    turnOffTV()
-  ])
+  Promise.race(
+    [
+      axios({
+        method,
+        url: url || `http://${ip}:${port}/${action}`,
+        data
+      }),
+      new Promise(resolve => {
+        setTimeout(resolve, 800)
+      }),
+      tv ? turnOffTV() : false
+    ].filter(Boolean)
+  )
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })
     })
@@ -112,18 +117,20 @@ app.get('/remote/:action', (req, res) => {
 
 app.get('/:ipAddress/:action', (req, res) => {
   const {
-    params: { ipAddress, action }
+    params: { ipAddress, action, tv }
   } = req
 
-  Promise.race([
-    axios.post(
-      `http://${ipAddress}:${DEFAULT_POWER_OFF_REMOTE_PORT}/${action}`
-    ),
-    new Promise(resolve => {
-      setTimeout(resolve, 800)
-    }),
-    turnOffTV()
-  ])
+  Promise.race(
+    [
+      axios.post(
+        `http://${ipAddress}:${DEFAULT_POWER_OFF_REMOTE_PORT}/${action}`
+      ),
+      new Promise(resolve => {
+        setTimeout(resolve, 800)
+      }),
+      tv ? turnOffTV() : false
+    ].filter(Boolean)
+  )
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })
     })

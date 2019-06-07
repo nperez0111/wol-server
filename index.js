@@ -3,10 +3,27 @@ const axios = require('axios')
 const wol = require('wake_on_lan')
 const bodyParser = require('body-parser')
 const server = require('http').createServer()
+const execa = require('execa')
+const commandExists = require('command-exists')
 
 const app = express()
 
 app.use('/healthcheck', require('express-healthcheck')())
+
+async function setTVStatus(status) {
+  let stdin = 'on 0'
+  if (status === 'off') {
+    stdin = 'standby 0'
+  }
+  try {
+    return await execa('cec-client', ['-s', '-d', '1'], { stdin })
+  } catch {
+    // Swallow error
+    return false
+  }
+}
+const turnOnTV = () => setTVStatus('on')
+const turnOffTV = () => setTVStatus('off')
 
 function wake(macAddress, options) {
   return new Promise((resolve, reject) => {
@@ -15,7 +32,16 @@ function wake(macAddress, options) {
         if (error) {
           reject(error)
         } else {
-          resolve()
+          if (commandExists('cec-client')) {
+            turnOnTV().then(success => {
+              if (!success) {
+                console.log('unable to turn on tv')
+              }
+              resolve()
+            })
+          } else {
+            resolve()
+          }
         }
       })
     } catch (err) {
@@ -80,7 +106,8 @@ app.get('/remote/:action', (req, res) => {
     }),
     new Promise(resolve => {
       setTimeout(resolve, 800)
-    })
+    }),
+    turnOffTV()
   ])
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })
@@ -101,7 +128,8 @@ app.get('/:ipAddress/:action', (req, res) => {
     ),
     new Promise(resolve => {
       setTimeout(resolve, 800)
-    })
+    }),
+    turnOffTV()
   ])
     .then(() => {
       res.status(200).json({ ok: true, status: 'complete' })

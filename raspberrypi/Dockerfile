@@ -1,10 +1,10 @@
-FROM node:12-stretch-slim
+FROM node:8-jessie
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --only=production
 
 COPY index.js .
 
